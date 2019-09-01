@@ -1,68 +1,117 @@
-var express = require("express");
- var path = require("path");
-
-
-
- const pdfFolder = './downloads';
+//IMPORT MODULES
+const express = require("express");
+const path = require("path");
 const fs = require('fs');
+const bodyParser = require("body-parser");
+const hbs = require('handlebars');
+const puppeteer = require('puppeteer');
+const fileUpload = require('express-fileupload');
+const file = require("fs");
+const app = express();
 
-var db = require('./db');
- 
-  var bodyParser = require("body-parser");
-
-  app = express();
-
-  const puppeteer=require('puppeteer');
-
-
-var hbs=require('handlebars');
-app.set("view engine", "hbs");
-
-app.set("views", path.join(__dirname, "views"));
-app.set("downloads", path.join(__dirname, "downloads"));
-
-
-app.use(express.urlencoded());
-
-app.use(express.static('templates2'));
-
-
-
+//CODE TO REMOVE
+const mysql = require('mysql');
+const csv = require('fast-csv');
 const XLSXtoMYSQL = require('xlsx-mysql');
+
+
+//DEFINE PORT 
+const port = process.env.PORT || 3000;
+
+
+//IMPORT DATABASE CONNECTION FILE
+const connection = require('./config/connection');
+
+
+//SET OUTPUT FOLDER FOR GENERATED CERTIFICATE
+// const pdfFolder = './downloads';
+
+
+//USE BODY PARSER MIDDLEWARE
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.static(path.join(__dirname, "downloads")));
+
+//USE TEMPLATE ENGINE
+app.set("view engine", "hbs");
+// app.set("downloads", path.join(__dirname, "downloads"));
+
+
+//DEFINE STATIC FOLDER
+app.use(express.static('public'));
+
+
+//USE FILE UPLOAD MIDDLEWARE
+// app.use(fileUpload());
+
+
+// app.use(express.urlencoded());
+
+// app.use(express.static('templates2'));
+
+
+
+
+
+
+// app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "downloads")));
 var handlebars;
 
 
-const fileUpload = require('express-fileupload');
-app.use(fileUpload());
 
-const file=require("fs");
-var mysql = require('mysql');
 
-app.get('/',function(request,response){
-response.render('start2');
+//DEFINE ROUTES
+
+
+//HOMEPAGE ROUTE
+app.get('/',(req,res)=>{
+  res.render('homepage');
+});
+
+
+//TEST ROUTE
+app.get('/test',(req,res)=>{
+  res.render('test11');
+})
+
+
+//CRM ROUTE
+app.get('/batches',(req,res)=>{
+  connection.query("SELECT * FROM batch WHERE is_deleted = '0' order by bid desc",(err, batches, fields)=>{
+      if(err) throw err;
+      res.render('batches',{batches:batches});
+  })
+})
+
+var queryResult = '';
+var queryl='';
+
+//GET BATCH STUDENTS ROUTES
+app.get('/batch/:id',(req,res)=>{
+    connection.query("SELECT r.*, l.batch, l.id as lead_id ,x.bid as batch,x.course,x.batchDate,k.batch_id as batch_detail,k.date,k.day, md.lead_id as moodleuser, md.lms_mail, md.payment_mail FROM registration r LEFT JOIN lswsheets l ON l.id = r.lead_id LEFT JOIN moodle_user md ON md.lead_id = l.id LEFT JOIN batch_detail k ON   k.batch_id=l.batch  AND day=4 LEFT JOIN batch x ON x.bid=l.batch     WHERE l.batch  ='"+req.params.id+"'",(err, result, fields)=>{
+      if(err) throw err;
+      res.render('batch',{students:result});
+      queryResult=result;
+      queryl=result.length;
+      console.log(queryResult);
+    });
 });
 
 
 
-
-
-
-app.get('/app2',function(request,response){
-response.render("page.hbs")
+//GENERATE FROM CSV ROUTE
+app.get('/upload-csv',(req,res)=>{
+  res.render('upload-csv');
 });
 
-const csv = require('fast-csv');
+
+
 
 
 var as='';
 var ad='';
-var queryResult = '';
-var queryl='';
+
 var token='';
 var batch_date='';
   var course='';
@@ -213,73 +262,8 @@ resp.render('excel_table2',{jo:results});
 
 
 
-app.get('/table2',(req,res)=>{
 
 
-  var connection = mysql.createConnection({
-      multipleStatements: true,
-      
-      host     : 'localhost',
-      user     :"henrqfaw_henry",
-      password : "^*OWu&u(Bbw=",
-      database : "henrqfaw_henry"
-  }); 
-
-  connection.connect((err)=>{
-    if(err) throw err;
-    var fg=4;
-    
-    connection.query("SELECT* FROM batch WHERE is_deleted = '0' order by bid desc",(err, result, fields)=>{
-      /*connection.query(sql,(err, result, fields)=>{*/
-      if(err) throw err;
-      //var result=result[0]+result[1];
-/*                console.log(result);*/
-
-var students;
-res.render('table2',{students:result});
-
-
-
-      
-      
-    });
-    //connection.end();
-  });
-
-
-});
-
-app.get('/students/:id',(req,res)=>{
-  var connection = mysql.createConnection({
-      /*multipleStatements: true,*/
-      
-      host     : 'localhost',
-      user     :"henrqfaw_henry",
-      password : "^*OWu&u(Bbw=",
-      database : "henrqfaw_henry"
-  }); 
-
-  connection.connect((err)=>{
-    if(err) throw err;
-/*    var sql = "SELECT * FROM batch_detail WHERE is_deleted = '0' AND batch_id = 69 AND day='"+req.params.id+"'";
-*/    
-    
-      connection.query("SELECT r.*, l.batch, l.id as lead_id ,x.bid as batch,x.course,x.batchDate,k.batch_id as batch_detail,k.date,k.day, md.lead_id as moodleuser, md.lms_mail, md.payment_mail FROM registration r LEFT JOIN lswsheets l ON l.id = r.lead_id LEFT JOIN moodle_user md ON md.lead_id = l.id LEFT JOIN batch_detail k ON   k.batch_id=l.batch  AND day=4 LEFT JOIN batch x ON x.bid=l.batch     WHERE l.batch  ='"+req.params.id+"'",(err, result, fields)=>{
-      if(err) throw err;
-                 res.render('students',{students:result});
-                queryResult=result;
-                queryl=result.length;
-                console.log(queryl);
-                /*console.log(typeof(data));*/
-//app.use(express.bodyParser())
-
-
- });
-    //connection.end();
-  });
-
-
-});
 
 
 
@@ -303,91 +287,10 @@ for (var i = 0 ; i < queryResult.length; i++) {
 });
 
 app.get('/generate',(req,res)=>{
-/*  res.render("prime",{length:length});*/
- 
-
-      var compile=async function(templateName,queryResult){
-  var filePath=path.join(process.cwd(),'templates2',`${templateName}.hbs`);
-  //console.log(filePath)
-  var html=fs.readFileSync(filePath,'utf-8', function(err, result) {
-    if (err) console.log("readFile error", err);
-  });
-
- //console.log(result);
-  return hbs.compile(html)(queryResult);
-
-};
 
 
-(async function(){
 
-  try{
-    var browser= await puppeteer.launch({
-    args: ['--no-sandbox'],
-    headless: true
-  });
-
-    for (var i = 0; i < queryResult.length; i++) {
-    
-    var page=await browser.newPage();
-    if(queryResult[i].course=='GST'){
-    
-        var content= await compile('test11',queryResult[i]);
-      }
-    else if(queryResult[i].course=='CDCW'){
-          var content= await compile('test12',queryResult[i]);
-        }
-    else if(queryResult[i].course=='CBAP'){
-
-         var content= await compile('test13',queryResult[i]);
-
-    } 
-
-    else if(queryResult[i].course=='CSGB'){
-      var content= await compile('test14',queryResult[i]);
-
-    }  
-    else{
-
-      var content= await compile('test15',queryResult[i]);
-    }
-    await page.setContent(content);
-    await page.setViewport({
-        width: 1024,
-        height: 730,
-        deviceScaleFactor: 3
-    });
-    await page.emulateMedia('screen');
-
-/*    await page.screenshot({fullPage: true, path: });
-*/
-
-   
-    await page.screenshot({
-      path:'./downloads/'+`${queryResult[i].name}`+(i+1)+'.png',
-      /*width: '950px',
-        height: '650px',
-        pageRanges: '1-1',
-      printbackground:true*/
-      fullpage:true
       
-    });}
-    
-    //alert(' All Certificates Generated!!');
-    console.log('done');
-    /*alert('pdf generated check directory');*/
-    /*console.log(cd);*/
-  
-  
-  }
-  catch(e){
-    console.log('our  error',e);
-
-  }
-})();
-
-
-      //res.send("Hello");
      
 });
 
@@ -399,16 +302,16 @@ app.get('/certificate_no',(req,res)=>{
 });
 
 
-app.get('/explorer',(req,res)=>{
+app.get('/show-certificates',(req,res)=>{
   var fileArray = [];
   fs.readdir(pdfFolder, (err, files) => {
-    files.forEach(file => {
-      fileArray.push(file);
+  files.forEach(file => {
+    fileArray.push(file);
 
-    });
-    
-    res.render('explorer.hbs',{files:fileArray});
   });
+  
+  res.render('explorer.hbs',{files:fileArray});
+});
 
   
 
@@ -425,18 +328,12 @@ res.render('students2',{students2:queryResult});
 
 
 
-app.post('/login',(req,res)=>{
-  var username= req.body.username;
-  var password= req.body.password;
-  //res.render(__dirname+""+Login.html);
-  console.log(username+''+password);
-
-});
 
 
-var port = process.env.PORT || 3000;
 
+
+//START APP ON GIVEN PORT
 app.listen(port, ()=>{
-    console.log(`My app started at port ${port}`);
+  console.log(`My app started at port ${port}`);
 });
 
