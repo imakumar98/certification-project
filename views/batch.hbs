@@ -212,7 +212,7 @@ section{
 <!-- follow me template -->
 <div class="d-flex  flex-row justify-content-center">
    <div class="p-5">
-      <button id="a1" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter" >
+      <button id="a1" type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal" >
                     Enter certificate no.
       </button>
       <span class="d-block text-center p-2">Step 1</span>  
@@ -223,12 +223,13 @@ section{
       <span class="d-block text-center p-2"> Step 2</span>
    </div>
    <div class="p-5">
-      <a class="btn btn-warning" href="/generate" role='button'>Generate certificates</a>
+      <button id="generate-certificate" class="btn btn-warning">Generate certificates</button>
       <span class="d-block text-center p-2"> Step 3</span>  
+      <div id="status">Status: </div>
    </div>
  </div>
 
-  <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content1">
                   <div class="modal-header">
@@ -240,17 +241,18 @@ section{
                   <div class='apex'>
                       
                     {{#each students }}
-                    <div class="modal-body text-center">
-                          <p class="d-inline mr-4 " style="font-size: 18px; text-align:left;color: #900C3F">{{ name }} </p>
-                    <input id='username'  class="modal-input border-bottom border-dark float-right" type="number">    
-                  </div>
+                      <div class="modal-body text-center">
+                        <p class="d-inline mr-4 certificate_name" style="font-size: 18px; text-align:left;color: #900C3F; text-transform: ">{{name}}</p>
+                        <input type="hidden" class="certificate_course" value="{{course}}" />
+                        <input id='username'  class="certificate_id modal-input border-bottom border-dark float-right" type="number">    
+                      </div>
                   {{/each }}
                   
 </div>
                   <br>
                   <div class="text-center">
 
-                  <input type="submit" onclick="opera()" value="submit" class="btn btn-dark mb-3">
+                  <input type="button" onclick="saveToLocalStorage()" value="SUBMIT" class="btn btn-dark mb-3">
 
                   </div>
               </div>
@@ -259,41 +261,54 @@ section{
 
     
 <script type="text/javascript">
+
 $('#a2').prop("disabled",true);
-  function opera(){
+
+
+
+$('#generate-certificate').on('click',function(){
+    var certificates = localStorage.getItem("certificates_details");
+    var certificates = JSON.parse(certificates);
+    
+    for(var i=0; i<certificates.length; i++){
+
+      $.ajax({
+        url: '/generate-certificate',
+        type: 'POST',
+        data: certificates[i],
+        success: function(response){
+          console.log(response);
+        }
+      });
+
+    }
+    
+})
+
+
+  function saveToLocalStorage(){
     $('#a1').prop("disabled",true);
     $('#a2').prop("disabled",false);
 
 
-    var g=[];
-    var a= document.getElementsByClassName("modal-input");
-    for(var i=0;i<a.length;i++){
-      g.push(a[i].value);
+    var certificates=[];
+
+    var certificate_id =  document.getElementsByClassName("certificate_id");
+    var certificate_name =  document.getElementsByClassName("certificate_name");
+    var certificate_course = document.getElementsByClassName("certificate_course");
+
+    for(var i=0;i<certificate_id.length;i++){
+      var certificate = {
+        id: certificate_id[i].value,
+        name: certificate_name[i].innerHTML,
+        course: certificate_course[i].value
+
+      };
+      certificates.push(certificate);
     }
-    //var packet={uname:a}
-   var packet=JSON.stringify(g);
-   
-    
-    
-    $.ajax({
-      type: "POST",
-      data: packet,
-      processData: false,
-      contentType: "application/json",
-      cache: false,
-      url: "/registeruser",
-      success: function(response) {
-        console.log(response)
-      },
-      error: function(response) {
-        console.log(response.responseText)
-      }
-
-      
-    });
-
-    console.log(g);
-
+    localStorage.setItem("certificates_details", JSON.stringify(certificates));
+    console.log(certificates);
+    $('#modal').modal('toggle');
   }
 
 </script>

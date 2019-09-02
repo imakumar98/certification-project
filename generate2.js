@@ -3,14 +3,20 @@ const fs = require('fs');
 const path = require('path');
 const hbs = require('handlebars');
 
-//DEFINITION OF COMPILE FUNCTION
-var compile=async function(templateName,queryResult){
 
+
+// res.render("prime",{prime:queryl});
+  console.time("dbsave");
+
+      var compile=async function(templateName,queryResult){
   var filePath=path.join(process.cwd(),'templates2',`${templateName}.hbs`);
-  
+  //console.log(filePath)
   var html=fs.readFileSync(filePath,'utf-8', function(err, result) {
-    if (err) console.log("File read error", err);
+    if (err) console.log("readFile error", err);
+    console.log(result);
   });
+
+
 
  // console.log(html);
   return hbs.compile(html)(queryResult);
@@ -20,11 +26,10 @@ var compile=async function(templateName,queryResult){
 
 (async function(){
 
-
-  var queryResult = [{
+	var queryResult = [{
     id: 216,
     lead_id: 73165,
-    name: 'Siddharth Jha',
+    name: 'Ashwani Test',
     image: '73165-Screenshot_20190625_220549.jpg',
     email: 'siddharth.jh2005@hotmail.com',
     mobile: '9958797991',
@@ -56,6 +61,9 @@ var compile=async function(templateName,queryResult){
   
   }]
 
+
+
+
   try{
     var browser= await puppeteer.launch({
     args: ['--no-sandbox'],
@@ -64,11 +72,10 @@ var compile=async function(templateName,queryResult){
 
     for (var i = 0; i < queryResult.length; i++) {
     
-    var page = await browser.newPage();
+    var page=await browser.newPage();
     if(queryResult[i].course=='GST'){
     
-        var content= await compile('test11',queryResult[i]);
-      }
+        var content= await compile('test11',queryResult[i]);}
     else if(queryResult[i].course=='CDCW'){
           var content= await compile('test12',queryResult[i]);
         }
@@ -102,21 +109,24 @@ var compile=async function(templateName,queryResult){
       path:'./downloads/'+`${queryResult[i].name}`+(i+1)+'.png',
       /*width: '950px',
         height: '650px',
-        pageRanges: '1-1',*/
-      printbackground:true,
+        pageRanges: '1-1',
+      printbackground:true*/
       fullpage:true
       
     });}
-    
+    console.timeEnd("dbsave");
     //alert(' All Certificates Generated!!');
     console.log('done');
     /*alert('pdf generated check directory');*/
     /*console.log(cd);*/
-  
-  
+    await browser.close();
+    process.exit();
   }
   catch(e){
-    console.log('Error: ',e);
+    console.log('our  error',e);
 
   }
 })();
+
+
+      //res.send("Hello");

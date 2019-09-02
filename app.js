@@ -29,7 +29,7 @@ const connection = require('./config/connection');
 
 //USE BODY PARSER MIDDLEWARE
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 //USE TEMPLATE ENGINE
@@ -72,7 +72,7 @@ app.get('/',(req,res)=>{
 
 //TEST ROUTE
 app.get('/test',(req,res)=>{
-  res.render('test11');
+  res.render('certificate-frame');
 })
 
 
@@ -84,18 +84,33 @@ app.get('/batches',(req,res)=>{
   })
 })
 
-var queryResult = '';
-var queryl='';
 
 //GET BATCH STUDENTS ROUTES
 app.get('/batch/:id',(req,res)=>{
     connection.query("SELECT r.*, l.batch, l.id as lead_id ,x.bid as batch,x.course,x.batchDate,k.batch_id as batch_detail,k.date,k.day, md.lead_id as moodleuser, md.lms_mail, md.payment_mail FROM registration r LEFT JOIN lswsheets l ON l.id = r.lead_id LEFT JOIN moodle_user md ON md.lead_id = l.id LEFT JOIN batch_detail k ON   k.batch_id=l.batch  AND day=4 LEFT JOIN batch x ON x.bid=l.batch     WHERE l.batch  ='"+req.params.id+"'",(err, result, fields)=>{
       if(err) throw err;
       res.render('batch',{students:result});
-      queryResult=result;
-      queryl=result.length;
-      console.log(queryResult);
     });
+});
+
+
+//GENERATE CERTIFICATE ROUTE
+app.post('/generate-certificate', (req,res)=>{
+  const id = req.body.id;
+  const name = req.body.name;
+  const course = req.body.course;
+
+  const certificate = {
+    id: id,
+    name: name,
+    course: course
+  };
+
+  //Should return promise
+  generateCertificate(certificate);
+
+
+  res.send("We are generating certificate for " + name);
 });
 
 
@@ -260,31 +275,6 @@ resp.render('excel_table2',{jo:results});
 
 
 
-
-
-
-
-
-
-
-
-
-app.post("/registeruser", function(req, resp) {
-  /*console.log("values accepted!");*/
-  var packet=req.body;
-
-var jsonObj = {};
-for (var i = 0 ; i < queryResult.length; i++) {
-    /*jsonObj["newdate"+i] = packet[i];
-    data[i].push(jsonObj);*/
-    queryResult[i].newdate = packet[i];
-    
-}
-
-
-
-
-});
 
 app.get('/generate',(req,res)=>{
 
