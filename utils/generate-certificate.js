@@ -33,7 +33,7 @@ function generateCertificate(certificate){
       });
       await page.emulateMedia('screen');
       await page.screenshot({
-        path:'./downloads/'+Date.now()+'.png',
+        path:'./output/'+Date.now()+'.png',
         fullpage:true
       });
       resolve(true);

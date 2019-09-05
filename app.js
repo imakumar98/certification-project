@@ -19,8 +19,8 @@ const XLSXtoMYSQL = require('xlsx-mysql');
 const port = process.env.PORT || 3000;
 
 
-//IMPORT DATABASE CONNECTION FILE
-const connection = require('./config/connection');
+//IMPORT QUERY FUNCTIONS
+const {getBatches, getStudentsByBatch} = require('./utils/queries');
 
 
 //IMPORT CERTIFICATE GENERATOR FUNCTION
@@ -29,6 +29,9 @@ const generateCertificate = require('./utils/generate-certificate');
 
 //IMPORT TODAY DATE
 const todayDate = require('./utils/getTodayDate');
+
+
+
 
 
 //SET OUTPUT FOLDER FOR GENERATED CERTIFICATE
@@ -80,19 +83,19 @@ app.get('/',(req,res)=>{
 
 //CRM ROUTE
 app.get('/batches',(req,res)=>{
-  connection.query("SELECT * FROM batch WHERE is_deleted = '0' order by bid desc",(err, batches, fields)=>{
-      if(err) throw err;
+    getBatches((batches)=>{
       res.render('batches',{batches:batches});
-  })
+    })
 })
 
 
 //GET BATCH STUDENTS ROUTES
 app.get('/batch/:id',(req,res)=>{
-    connection.query("SELECT r.*, l.batch, l.id as lead_id ,x.bid as batch,x.course,x.batchDate,k.batch_id as batch_detail,k.date,k.day, md.lead_id as moodleuser, md.lms_mail, md.payment_mail FROM registration r LEFT JOIN lswsheets l ON l.id = r.lead_id LEFT JOIN moodle_user md ON md.lead_id = l.id LEFT JOIN batch_detail k ON   k.batch_id=l.batch  AND day=4 LEFT JOIN batch x ON x.bid=l.batch     WHERE l.batch  ='"+req.params.id+"'",(err, result, fields)=>{
-      if(err) throw err;
-      res.render('batch',{students:result});
-    });
+    getStudentsByBatch(req.params.id,(students)=>{
+      res.render('batch',{students:students});
+    })
+      
+    
 });
 
 
