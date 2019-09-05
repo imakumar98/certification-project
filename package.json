@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "axios": "^0.19.0",
     "csvtojson": "^2.0.10",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.5",
@@ -13,6 +14,7 @@
     "hbs": "^4.0.4",
     "jimp": "^0.6.4",
     "mysql": "^2.17.1",
+    "node-fetch": "^2.6.0",
     "path": "^0.12.7",
     "puppeteer": "^1.18.1",
     "simple-excel-to-json": "^2.2.1",

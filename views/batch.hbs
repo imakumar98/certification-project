@@ -223,9 +223,10 @@ section{
       <span class="d-block text-center p-2"> Step 2</span>
    </div>
    <div class="p-5">
+      <div id="status"></div>
       <button id="generate-certificate" class="btn btn-warning">Generate certificates</button>
       <span class="d-block text-center p-2"> Step 3</span>  
-      <div id="status">Status: </div>
+     
    </div>
  </div>
 
@@ -266,21 +267,39 @@ $('#a2').prop("disabled",true);
 
 
 
-$('#generate-certificate').on('click',function(){
+$('#generate-certificate').on('click',async function(){
     var certificates = localStorage.getItem("certificates_details");
     var certificates = JSON.parse(certificates);
+
+   
     
     for(var i=0; i<certificates.length; i++){
 
-      $.ajax({
-        url: '/generate-certificate',
-        type: 'POST',
-        data: certificates[i],
-        success: function(response){
-          console.log(response);
-        }
-      });
 
+      if(certificates[i].course=='GST' || certificates[i].course=='CDCW' || certificates[i].course=='CBAP' || certificates[i].course=='CSBB' || certificates[i].course=='CSGB'){
+        
+         $.ajax({
+          url: '/generate-certificate',
+          type: 'POST',
+          data: certificates[i],
+          beforeSend: function(){
+            console.log(i+1);
+          
+          },
+          success: function(response){
+            var current = i;
+            var status = 'Generated : ' + current + ' of ' + certificates.length;
+            $('#status').html(status);
+            console.log(response);
+          }
+        });
+        
+        
+
+        
+      }else{
+        console.log("Course type not supported!!");
+      }
     }
     
 })

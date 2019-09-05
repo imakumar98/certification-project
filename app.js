@@ -23,6 +23,14 @@ const port = process.env.PORT || 3000;
 const connection = require('./config/connection');
 
 
+//IMPORT CERTIFICATE GENERATOR FUNCTION
+const generateCertificate = require('./utils/generate-certificate');
+
+
+//IMPORT TODAY DATE
+const todayDate = require('./utils/getTodayDate');
+
+
 //SET OUTPUT FOLDER FOR GENERATED CERTIFICATE
 // const pdfFolder = './downloads';
 
@@ -42,7 +50,7 @@ app.use(express.static('public'));
 
 
 //USE FILE UPLOAD MIDDLEWARE
-// app.use(fileUpload());
+app.use(fileUpload());
 
 
 // app.use(express.urlencoded());
@@ -68,12 +76,6 @@ var handlebars;
 app.get('/',(req,res)=>{
   res.render('homepage');
 });
-
-
-//TEST ROUTE
-app.get('/test',(req,res)=>{
-  res.render('certificate-frame');
-})
 
 
 //CRM ROUTE
@@ -103,14 +105,21 @@ app.post('/generate-certificate', (req,res)=>{
   const certificate = {
     id: id,
     name: name,
-    course: course
+    course: course,
+    date: todayDate
   };
 
-  //Should return promise
-  generateCertificate(certificate);
+  
+  generateCertificate(certificate).then(status=>{
+    if(status==true){
+      res.json({status: 200, message: 'Certificate generated', success: true, error: false});
+    }else{
+      res.json({status: 500, message: 'Certificate generation failed', success: false, error: true});
+    }
+  }).catch(err=>{
+    res.json({status: 500, message: 'Certificate generation failed', success: false, error: true, err: err});
+  })
 
-
-  res.send("We are generating certificate for " + name);
 });
 
 
@@ -133,8 +142,8 @@ var batch_date='';
   var length='';
   var csk=[];
 
-app.post('/upload', function(req, res) {
-  if (Object.keys(req.files).length == 0) {
+app.post('/upload', function(req, res){
+  if (req.files.length == 0) {
     return res.status(400).send('No files were uploaded.');
   }
 
@@ -146,10 +155,12 @@ var file2=sampleFile.name;
 ad=file2;
   as=file2.replace(/\.[^/.]+$/, "");
 
+  var fileName = Date.now() + '.csv';
+
   // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv('./utils/'+sampleFile.name, function(err) {
+  sampleFile.mv('./utils/'+ fileName, function(err) {
     if (err) return res.status(500).send(err);
-    importCsvData2MySQL('./utils/'+as+'.csv');
+    importCsvData2MySQL('./utils/'+fileName);
 
 
 function importCsvData2MySQL(filename){
@@ -163,7 +174,7 @@ function importCsvData2MySQL(filename){
         .on("end", function () {
             // Remove Header ROW
             csvData.shift();
-            token= csvData[1][6];
+            token= csvData[1][7];
             batch_date=csvData[1][4];
             course=csvData[1][2];
             length=csvData.length;
@@ -173,24 +184,13 @@ function importCsvData2MySQL(filename){
               csk.push(batch_date);
               csk.push(token);
 console.log(csk);
+
+// console.log(csvData);
             
             
-           
-
-            const connection = mysql.createConnection({
-                
-      host     : 'localhost',
-      user     :"henrqfaw_henry",
-      password : "^*OWu&u(Bbw=",
-      database : "henrqfaw_henry"
-            });
-
-            // Open the MySQL connection
-            connection.connect((error) => {
-                if (error) {
-                    console.error(error);
-                } else {
-                    let query = 'REPLACE INTO cms(s_no,name,course,certificate_no,batch_date,email,token) VALUES ?';
+            
+                    let query = 'REPLACE INTO cms(s_no, name, course, certificate_no, batch_date, email, contact, token) VALUES ?';
+                    // let query = 'REPLACE INTO cms(course,batch_date,token) VALUES ?';
                     connection.query(query, [csvData], (error, response) => {
                       if(error) throw error;
 
@@ -202,8 +202,8 @@ console.log(csk);
                         
                     });
                     
-                }
-            });
+                
+            
         });
 
     stream.pipe(csvStream);
@@ -223,7 +223,7 @@ app.get("/db1",(req,resp)=>{
   
   
   var sql = 'SELECT * FROM cms WHERE token = ?';
-  db.query(sql, token, (err,results,fields)=>{
+  connection.query(sql, token, (err,results,fields)=>{
     if(err) throw err;
     queryResult=results;
     console.log(queryResult);
@@ -240,25 +240,19 @@ app.get("/db2",(req,resp)=>{
 
 
                     let que = `REPLACE INTO records(length,course,batch_date,token) VALUES ('${length}', '${course}', '${batch_date}','${token}');`
-                    db.query(que, (error, response) => {
+                    connection.query(que, (error, response) => {
                        
                      if(error) throw error;
 
                         console.log("records updated");
                         
                     });
-
-
- 
-
-
-
 });
 
 app.get("/db3",(req,resp)=>{
 
 var sql = 'SELECT * FROM records';
-  db.query(sql, (err,results,fields)=>{
+  connection.query(sql, (err,results,fields)=>{
     if(err) throw err;
    
     var jo;
@@ -266,23 +260,6 @@ resp.render('excel_table2',{jo:results});
   });
 });
 
-
-
-
-
-
-
-
-
-
-
-app.get('/generate',(req,res)=>{
-
-
-
-      
-     
-});
 
    
 
@@ -314,12 +291,6 @@ console.log(queryResult);
 res.render('students2',{students2:queryResult});
 
 });
-
-
-
-
-
-
 
 
 //START APP ON GIVEN PORT

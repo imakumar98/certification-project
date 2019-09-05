@@ -5,14 +5,6 @@ const hbs = require('handlebars');
 
 
 
-hbs.registerHelper('ifeq', (a, b, options) => {
-  if (a === b) {
-    return options.fn(this)
-  }
-  return options.inverse(this)
-})
-
-
 
 //DEFINITION OF COMPILE FUNCTION
 const compile = async function(frame,details){
@@ -74,7 +66,11 @@ const certificate = {
   id: '1234'
 }
 
-generateCertificate(certificate);
+generateCertificate(certificate).then(res=>{
+  console.log(res);
+}).catch(err=>{
+  console.log("Certification generation failed");
+})
 
 
 
