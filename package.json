@@ -11,17 +11,9 @@
     "fs-extra": "^8.1.0",
     "handlebars": "^4.1.2",
     "hbs": "^4.0.4",
-    "jimp": "^0.6.4",
-    "mysql": "^2.17.1",
     "path": "^0.12.7",
     "puppeteer": "^1.18.1",
-    "request": "^2.88.0",
-    "simple-excel-to-json": "^2.2.1",
-    "xls-to-json": "^0.5.2",
-    "xlsx-mysql": "^1.0.7",
-    "xlsx-to-json": "^0.3.0",
-    "xlsx-to-json-lc": "^0.5.0",
-    "xlsx2json": "^1.0.0"
+    "request": "^2.88.0"
   },
   "devDependencies": {},
   "scripts": {

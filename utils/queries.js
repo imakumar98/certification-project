@@ -2,9 +2,8 @@
 const request = require('request');
 
 
-//IMPORT CONFIG
-const TOKEN = require('./../config/config');
-const API_URL = require('./../config/config');
+//IMPORT GLOBAL VARIABLES
+const {TOKEN, API_URL} = require('./../config/config');
 
 
 //EXPORT FUNCTIONS
@@ -13,7 +12,7 @@ module.exports = {
     getBatches: function(func){
         const options = {
             method: 'GET',
-            url: 'http://henryharvin.website/imakumar/api.php',
+            url: API_URL,
             qs: { 
                 batches: 'all',
                 token: TOKEN
@@ -29,7 +28,7 @@ module.exports = {
     getStudentsByBatch: function(batchId, func){
         const options = {
             method: 'GET',
-            url: 'http://henryharvin.website/imakumar/api.php',
+            url: API_URL,
             qs: { 
                 batchId: batchId,
                 token: TOKEN

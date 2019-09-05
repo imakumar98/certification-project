@@ -6,13 +6,8 @@ const bodyParser = require("body-parser");
 const hbs = require('handlebars');
 const puppeteer = require('puppeteer');
 const fileUpload = require('express-fileupload');
-const file = require("fs");
-const app = express();
-
-//CODE TO REMOVE
-const mysql = require('mysql');
 const csv = require('fast-csv');
-const XLSXtoMYSQL = require('xlsx-mysql');
+const app = express();
 
 
 //DEFINE PORT 
@@ -31,11 +26,8 @@ const generateCertificate = require('./utils/generate-certificate');
 const todayDate = require('./utils/getTodayDate');
 
 
-
-
-
 //SET OUTPUT FOLDER FOR GENERATED CERTIFICATE
-// const pdfFolder = './downloads';
+const output = './output';
 
 
 //USE BODY PARSER MIDDLEWARE
@@ -45,35 +37,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //USE TEMPLATE ENGINE
 app.set("view engine", "hbs");
-// app.set("downloads", path.join(__dirname, "downloads"));
-
-
-//DEFINE STATIC FOLDER
-app.use(express.static('public'));
 
 
 //USE FILE UPLOAD MIDDLEWARE
 app.use(fileUpload());
 
 
-// app.use(express.urlencoded());
-
-// app.use(express.static('templates2'));
-
-
-
-
-
-
-// app.use(express.static(path.join(__dirname, "public")));
-// app.use(express.static(path.join(__dirname, "downloads")));
-var handlebars;
-
-
-
 
 //DEFINE ROUTES
-
 
 //HOMEPAGE ROUTE
 app.get('/',(req,res)=>{
@@ -94,8 +65,6 @@ app.get('/batch/:id',(req,res)=>{
     getStudentsByBatch(req.params.id,(students)=>{
       res.render('batch',{students:students});
     })
-      
-    
 });
 
 
@@ -104,15 +73,12 @@ app.post('/generate-certificate', (req,res)=>{
   const id = req.body.id;
   const name = req.body.name;
   const course = req.body.course;
-
   const certificate = {
     id: id,
     name: name,
     course: course,
     date: todayDate
   };
-
-  
   generateCertificate(certificate).then(status=>{
     if(status==true){
       res.json({status: 200, message: 'Certificate generated', success: true, error: false});
@@ -122,15 +88,15 @@ app.post('/generate-certificate', (req,res)=>{
   }).catch(err=>{
     res.json({status: 500, message: 'Certificate generation failed', success: false, error: true, err: err});
   })
-
 });
 
 
-
-//GENERATE FROM CSV ROUTE
+//UPLOAD CSV ROUTE
 app.get('/upload-csv',(req,res)=>{
   res.render('upload-csv');
 });
+
+/* WORKED TILL HERE*/
 
 
 
@@ -150,70 +116,16 @@ app.post('/upload', function(req, res){
     return res.status(400).send('No files were uploaded.');
   }
 
-  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-  let sampleFile = req.files.sampleFile;
-  
-  
-var file2=sampleFile.name;
-ad=file2;
+  var csvFile = req.files.csvFile;
+  var file2 = csvFile.name;
+  ad=file2;
   as=file2.replace(/\.[^/.]+$/, "");
-
   var fileName = Date.now() + '.csv';
 
   // Use the mv() method to place the file somewhere on your server
   sampleFile.mv('./utils/'+ fileName, function(err) {
     if (err) return res.status(500).send(err);
-    importCsvData2MySQL('./utils/'+fileName);
-
-
-function importCsvData2MySQL(filename){
-    let stream = fs.createReadStream(filename);
-    let csvData = [];
-    let csvStream = csv
-        .parse()
-        .on("data", function (data) {
-            csvData.push(data);
-        })
-        .on("end", function () {
-            // Remove Header ROW
-            csvData.shift();
-            token= csvData[1][7];
-            batch_date=csvData[1][4];
-            course=csvData[1][2];
-            length=csvData.length;
-            
-              /*csk.push(length);*/
-              csk.push(course);
-              csk.push(batch_date);
-              csk.push(token);
-console.log(csk);
-
-// console.log(csvData);
-            
-            
-            
-                    let query = 'REPLACE INTO cms(s_no, name, course, certificate_no, batch_date, email, contact, token) VALUES ?';
-                    // let query = 'REPLACE INTO cms(course,batch_date,token) VALUES ?';
-                    connection.query(query, [csvData], (error, response) => {
-                      if(error) throw error;
-
-                       
-                      
-
-                        console.log("done");
-                 
-                        
-                    });
-                    
-                
-            
-        });
-
-    stream.pipe(csvStream);
-                               }
-
-
-     
+    //Call Function to convert to json from file
   });
   
 });
@@ -268,31 +180,26 @@ resp.render('excel_table2',{jo:results});
 
 app.get('/certificate_no',(req,res)=>{
   res.render('base.hbs');
-
 });
+
+
 
 
 app.get('/show-certificates',(req,res)=>{
   var fileArray = [];
-  fs.readdir(pdfFolder, (err, files) => {
-  files.forEach(file => {
-    fileArray.push(file);
-
+  fs.readdir(output, (err, files) => {
+    files.forEach(file => {
+      fileArray.push(file);
+    });
+    res.render('explorer',{files:fileArray});
   });
-  
-  res.render('explorer.hbs',{files:fileArray});
 });
 
-  
 
-  
-
-});
-
+//RE-EDIT
 app.get("/redit",function(req,res){
-console.log(queryResult);
-res.render('students2',{students2:queryResult});
-
+  console.log(queryResult);
+  res.render('students2',{students2:queryResult});
 });
 
 
