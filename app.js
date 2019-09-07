@@ -57,6 +57,7 @@ app.get('/batches',(req,res)=>{
     getBatches((batches)=>{
       res.render('batches',{batches:batches});
     })
+    
 })
 
 
@@ -198,8 +199,7 @@ app.get('/show-certificates',(req,res)=>{
 
 //RE-EDIT
 app.get("/redit",function(req,res){
-  console.log(queryResult);
-  res.render('students2',{students2:queryResult});
+  res.render('edit-students');
 });
 
 

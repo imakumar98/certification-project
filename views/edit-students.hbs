@@ -175,58 +175,42 @@ section{
         
 
         <tr>
-         
-          <th>Lead Id</th>
-          <th>Name</th>
-          <th>Email</th>
-          {{!-- <th>mobile</th> --}}
-          <TH>Mobile</TH>
+         <th>Name</th>
           
+          
+          <th></th>
+          {{!-- <th>Email</th> --}}
+          {{!-- <th>mobile</th> --}}
+          {{!-- <TH>Mobile</TH> --}}
           <th>Course</th>
-          <th>Starting Date</th>
-          <th>Certificate No.</th>
+          <th>Certification number</th>
+          <th>Action</th>
+          {{!-- <th>Starting Date</th> --}}
           
         </tr>
       </thead>
     </table>
   </div>
-  <div class="tbl-content"  >
-    <table cellpadding="0" cellspacing="0" border="0">
-      <tbody >
-        {{#each students2}}
-      <tr>
-
-      <td><b>{{ lead_id }}</td>
-      <td><b>{{ name }}</td>
-      <td><b>{{ email }}</td>
-              {{!-- <td><b>{{ mobile }}</td> --}}
-                <td><b>{{ mobile }}</td>
-                 <td><b>{{ course }}</td>
-                      <td><b>{{ batchDate }}</td>
-                        <td><b>{{ newdate }}</td>
-                    
-      
-    </tr>
-    {{/each}}
+  
+  <div class="tbl-cotent"  >
+    <table cellpadding="0" cellspacing="0" border="0" id="student-table">
+     
+      <tbody id="student-table-body">
+       
       </tbody>
     </table>
   </div>
 
 <!-- follow me template -->
 <div class="d-flex  flex-row justify-content-center">
-   <div class="p-5">
-      <button id="a1" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter" >
-                Re-enter certificate no.
-      </button>
-      <span class="d-block text-center p-2">Step 1</span>  
-   </div>
+   
 
    <div class="p-5">
       <a id="a2" class="btn btn-info" href="/redit" role='button'>Show certificate no.</a>
       <span class="d-block text-center p-2"> Step 2</span>
    </div>
    <div class="p-5">
-      <a class="btn btn-warning" href="/generate" role='button'>Generate certificates</a>
+      <a class="btn btn-warning" href="/generate-certificate" role='button'>Generate certificates</a>
       <span class="d-block text-center p-2"> Step 3</span>  
    </div>
    
@@ -239,7 +223,7 @@ section{
               <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content1">
                   <div class="modal-header">
-                    <h4 class="modal-title" id="exampleModalCenterTitle">Enter Certificate Number</h4>
+                    <h4 class="modal-title" id="exampleModalCenterTitle">Update Certificate Number</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                       <span aria-hidden="true">&times;</span>
                     </button>
@@ -247,19 +231,18 @@ section{
                   <div class='apex'>
 
                   
-                    {{#each students2 }}
-                    <div class="modal-body text-center">
-                          <p class="d-inline mr-4 " style="font-size: 18px; text-align:left;color: #900C3F">{{ name }} </p>
-                    <input id='username'  class="modal-input border-bottom border-dark float-right" type="number">    
+                    
+                    <div class="modal-body" id="modal-body">
+                      
                   </div>
-                  {{/each }}
+                
                   
 </div>
 
                   <br>
                   <div class="text-center">
 
-                  <input type="submit" onclick="opera()" value="submit" class="btn btn-dark mb-3">
+                  <input type="submit" onclick="opera()" value="SAVE" class="btn btn-dark mb-3">
 
                   </div>
               </div>
@@ -268,44 +251,83 @@ section{
 
     
 <script type="text/javascript">
+
+
+    $(document).ready(function(){
+        var certificates = localStorage.getItem("certificates_details");
+        var certificates = JSON.parse(certificates);
+      //  console.log(certificates);
+
+   
+        var html = '';
+        for(var i=0; i<certificates.length; i++){
+            html = html + "<tr class='rere'><td>"+certificates[i].name+"<td/><td>"+certificates[i].course+"</td><td class='certificate-id'>"+certificates[i].id+"</td><td><a data-toggle='modal' class='edit-button' data-target='#exampleModalCenter' href=''>EDIT</a></td></tr>";
+
+        }
+        console.log(html);
+        $('#student-table-body').html(html);
+
+
+        $('.edit-button').each(function(){
+            var button = $(this);
+            button.on('click',function(){
+                var parent_row_element = $(this).parent().parent();
+                var certificate_id = parent_row_element.find('.certificate-id').text();
+                
+                var input = "<input id='updated-certification-id' data-prev-id='"+certificate_id+"' class='modal-input border-bottom border-dark float-right' value='"+certificate_id+"' type='number'>";
+                $('#modal-body').html(input);
+            
+                
+            })
+        });
+
+      //  $('#edit-button').on('click',function(){
+            //var parent_row_element = $(this).parent();
+            //var name = parent_row_element.first().text();
+            //console.log(name);
+        //});
+
+
+
+
+
+    });
   $('#a2').click(function(){
   prop("disabled",true);});
 
 
   function opera(){
     
-    $('#a1').prop("disabled",true);
-    $('#a2').prop("disabled",false);
+   var id = $('#updated-certification-id').val();
+
+   var prev_id = $('#updated-certification-id').attr('data-prev-id');
 
 
-    var g=[];
-    var a= document.getElementsByClassName("modal-input");
-    for(var i=0;i<a.length;i++){
-      g.push(a[i].value);
+
+
+   var certificates = localStorage.getItem("certificates_details");
+    var certificates = JSON.parse(certificates);
+
+    for(var i=0; i<certificates.length; i++){
+        if(certificates[i].id==prev_id){
+            certificates[i].id = id;
+            console.log(certificates[i]);
+        }
+        
+        
+
     }
-    //var packet={uname:a}
-   var packet=JSON.stringify(g);
+
+    localStorage.setItem("certificates_details", JSON.stringify(certificates));
+
+    location.reload();
+
+  
+
+
    
-    
-    
-    $.ajax({
-      type: "POST",
-      data: packet,
-      processData: false,
-      contentType: "application/json",
-      cache: false,
-      url: "/registeruser",
-      success: function(response) {
-        console.log(response)
-      },
-      error: function(response) {
-        console.log(response.responseText)
-      }
 
-      
-    });
 
-    console.log(g);
 
   }
 
